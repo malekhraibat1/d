@@ -27,7 +27,10 @@ jobs:
             -scheme SolarEngineer \
             -configuration Release \
             -destination "generic/platform=iOS" \
-            -archivePath build/SolarEngineer.xcarchive
+            -archivePath build/SolarEngineer.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
 
       - name: Export IPA
         run: |
@@ -37,13 +40,20 @@ jobs:
           <dict>
             <key>method</key>
             <string>development</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict></dict>
           </dict>
           </plist>' > exportOptions.plist
           
           xcodebuild -exportArchive \
             -archivePath build/SolarEngineer.xcarchive \
             -exportPath build/ipa \
-            -exportOptionsPlist exportOptions.plist
+            -exportOptionsPlist exportOptions.plist \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
 
       - name: Save IPA as artifact
         uses: actions/upload-artifact@v4
