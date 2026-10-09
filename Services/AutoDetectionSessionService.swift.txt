@@ -1,0 +1,175 @@
+import Foundation
+import ARKit
+import Combine
+import simd
+
+@MainActor
+final class AutoDetectionSessionService: NSObject, ObservableObject {
+
+    @Published var isScanning: Bool = false
+    @Published var scanProgress: Double = 0
+    @Published var scanDuration: TimeInterval = 0
+    @Published var statusMessage: String = "وجّه الجهاز نحو السطح"
+    @Published var detectedElements: [AutoDetectedElement] = []
+
+    // المدة المستهدفة للمسح
+    var targetDuration: TimeInterval = 20
+
+    let session = ARSession()
+    private var arView: ARView?
+    private let engine = AutoDetectionEngine()
+    private var startTime: Date?
+    private var frameCounter = 0
+    private var scanTimer: Timer?
+    private var meshAnchorIDs: Set<UUID> = []
+
+    override init() {
+        super.init()
+        session.delegate = self
+    }
+
+    func attach(to view: ARView) {
+        self.arView = view
+        view.session = session
+    }
+
+    // MARK: - Start Scanning
+    func start() {
+        guard ARWorldTrackingConfiguration.isSupported else {
+            statusMessage = "ARKit غير مدعوم"
+            return
+        }
+
+        let config = ARWorldTrackingConfiguration()
+        config.planeDetection = [.horizontal, .vertical]
+        config.environmentTexturing = .automatic
+
+        if ARWorldTrackingConfiguration.supportsSceneReconstruction(.meshWithClassification) {
+            config.sceneReconstruction = .meshWithClassification
+        } else if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
+            config.sceneReconstruction = .mesh
+        }
+
+        session.run(config, options: [.resetTracking, .removeExistingAnchors])
+
+        isScanning = true
+        startTime = Date()
+        detectedElements.removeAll()
+        meshAnchorIDs.removeAll()
+        engine.reset()
+
+        statusMessage = "امسح السطح والجدران..."
+
+        // timer
+        scanTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, let start = self.startTime else { return }
+                let elapsed = Date().timeIntervalSince(start)
+                self.scanDuration = elapsed
+                self.scanProgress = min(elapsed / self.targetDuration, 1.0)
+
+                if self.scanProgress >= 1.0 {
+                    self.finishScanning()
+                } else {
+                    let remaining = Int(self.targetDuration - elapsed)
+                    self.statusMessage = "استمر في المسح — \(remaining) ث"
+                }
+            }
+        }
+    }
+
+    func stop() {
+        session.pause()
+        isScanning = false
+        scanTimer?.invalidate()
+        scanTimer = nil
+    }
+
+    // MARK: - Finish & Process
+    func finishScanning() {
+        scanTimer?.invalidate()
+        scanTimer = nil
+        isScanning = false
+
+        statusMessage = "جاري المعالجة..."
+
+        // اجمع mesh anchors
+        let meshAnchors = session.currentFrame?.anchors.compactMap {
+            $0 as? ARMeshAnchor
+        } ?? []
+
+        // 1. كشف الحدود من mesh
+        Task {
+            let edges = engine.detectEdgesFromMesh(meshAnchors: meshAnchors)
+            self.detectedElements.append(contentsOf: edges)
+
+            // خلاص
+            self.statusMessage = "اكتمل — \(self.detectedElements.count) عنصر"
+        }
+    }
+
+    // MARK: - Save
+    func saveConfirmed(to roof: RoofPlane, context: ModelContext) {
+        for element in detectedElements where !element.isIgnored {
+            element.roof = roof
+            context.insert(element)
+            roof.autoDetectedElements?.append(element)
+        }
+        try? context.save()
+    }
+
+    // MARK: - Manual add
+    func addManual(type: AutoElementType,
+                    center: SIMD3<Float>,
+                    width: Double, height: Double) {
+        let element = AutoDetectedElement(
+            type: type, center: center,
+            width: width, height: height
+        )
+        element.isConfirmed = true
+        element.detectionMethod = "manual"
+        detectedElements.append(element)
+    }
+
+    func toggleIgnore(_ element: AutoDetectedElement) {
+        element.isIgnored.toggle()
+    }
+
+    func confirmAll() {
+        for e in detectedElements { e.isConfirmed = true }
+    }
+
+    func remove(_ element: AutoDetectedElement) {
+        detectedElements.removeAll { $0.id == element.id }
+    }
+}
+
+// MARK: - ARSessionDelegate
+extension AutoDetectionSessionService: ARSessionDelegate {
+
+    nonisolated func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        Task { @MainActor in
+            guard isScanning else { return }
+
+            frameCounter += 1
+            // عالج كل 10 إطارات (3 fps)
+            guard frameCounter % 10 == 0 else { return }
+
+            let results = await engine.processFrame(frame)
+
+            for newElement in results {
+                // تحقق من عدم التكرار
+                let exists = self.detectedElements.contains { existing in
+                    existing.type == newElement.type &&
+                    simd_distance(existing.center, newElement.center) < 0.4
+                }
+                if !exists {
+                    self.detectedElements.append(newElement)
+                }
+            }
+        }
+    }
+}
+
+import RealityKit
+import SwiftData
