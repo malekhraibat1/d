@@ -6,7 +6,6 @@ targets:
   SolarEngineer:
     type: application
     platform: iOS
-    # هذا القسم هو الحل: يضع المعرف داخل ملف Info.plist مباشرة
     info:
       CFBundleIdentifier: com.yourcompany.SolarEngineer
       CFBundleShortVersionString: "1.0.0"
