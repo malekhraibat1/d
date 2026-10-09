@@ -28,6 +28,7 @@ jobs:
             -configuration Release \
             -destination "generic/platform=iOS" \
             -archivePath build/SolarEngineer.xcarchive \
+            PRODUCT_BUNDLE_IDENTIFIER=com.yourcompany.SolarEngineer \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
@@ -51,6 +52,7 @@ jobs:
             -archivePath build/SolarEngineer.xcarchive \
             -exportPath build/ipa \
             -exportOptionsPlist exportOptions.plist \
+            PRODUCT_BUNDLE_IDENTIFIER=com.yourcompany.SolarEngineer \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY=""
