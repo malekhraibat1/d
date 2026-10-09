@@ -1,0 +1,15 @@
+name: SolarEngineer
+options:
+  bundleId: com.yourcompany.SolarEngineer
+  deploymentTarget: "17.0"
+
+targets:
+  SolarEngineer:
+    type: application
+    platform: iOS
+    sources:
+      - path: Models
+      - path: Services
+      - path: Views
+      - path: Theme
+      - SolarEngineerApp.swift
