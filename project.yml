@@ -8,8 +8,8 @@ targets:
     type: application
     platform: iOS
     sources:
+      - path: App        # <--- تم تغييرها من SolarEngineerApp.swift إلى App
       - path: Models
       - path: Services
       - path: Views
       - path: Theme
-      - SolarEngineerApp.swift
