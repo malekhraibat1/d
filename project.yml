@@ -6,6 +6,7 @@ targets:
   SolarEngineer:
     type: application
     platform: iOS
+    bundleIdentifier: com.yourcompany.SolarEngineer # تعريف مباشر
     info:
       CFBundleIdentifier: com.yourcompany.SolarEngineer
       CFBundleShortVersionString: "1.0.0"
