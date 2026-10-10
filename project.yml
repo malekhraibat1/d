@@ -6,7 +6,6 @@ targets:
   SolarEngineer:
     type: application
     platform: iOS
-    bundleIdentifier: com.yourcompany.SolarEngineer # تعريف مباشر
     info:
       CFBundleIdentifier: com.yourcompany.SolarEngineer
       CFBundleShortVersionString: "1.0.0"
@@ -18,8 +17,8 @@ targets:
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGN_IDENTITY: ""
     sources:
-      - path: App
-      - path: Models
-      - path: Services
-      - path: Views
-      - path: Theme
+      - path: "App"
+      - path: "Models"
+      - path: "Services"
+      - path: "Views"
+      - path: "Theme"
