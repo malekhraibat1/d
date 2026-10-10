@@ -11,15 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug File Structure
+        run: |
+          echo "Current Directory Structure:"
+          ls -R
+        # هذا الأمر سيطبع كل الملفات والمجلدات في السجلات لنعرف أين المشكلة
+
       - name: Install XcodeGen
         run: brew install xcodegen
 
       - name: Generate Xcode Project
         run: xcodegen generate
-
-      - name: Verify Project Generation
-        run: ls -R | grep SolarEngineer.xcodeproj
-        # هذه الخطوة ستتوقف العملية فوراً إذا لم يتم إنشاء المشروع، لكي لا نضيع الوقت
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_15.2.app
