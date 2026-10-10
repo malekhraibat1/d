@@ -15,7 +15,6 @@ struct ContentView: View {
         TabView {
             HomeView()
                 .tabItem { Label("الرئيسية", systemImage: "sun.max.fill") }
-            
             AboutView()
                 .tabItem { Label("حول", systemImage: "info.circle.fill") }
         }
@@ -30,15 +29,14 @@ struct HomeView: View {
                 Image(systemName: "sun.max.fill")
                     .font(.system(size: 90))
                     .foregroundStyle(.orange.gradient)
-                    .symbolEffect(.pulse)
-                
+
                 Text("SolarEngineer")
                     .font(.largeTitle.bold())
-                
+
                 Text("مساعد مهندس الطاقة الشمسية")
                     .font(.title3)
                     .foregroundStyle(.secondary)
-                
+
                 VStack(alignment: .leading, spacing: 12) {
                     FeatureRow(icon: "square.grid.3x3.fill", title: "تخطيط الألواح", color: .blue)
                     FeatureRow(icon: "arkit", title: "الواقع المعزز", color: .purple)
@@ -49,10 +47,10 @@ struct HomeView: View {
                 .background(Color(.secondarySystemBackground))
                 .clipShape(RoundedRectangle(cornerRadius: 16))
                 .padding(.horizontal)
-                
+
                 Spacer()
-                
-                Text("النسخة 1.0.0")
+
+                Text("الإصدار 1.0.0")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -66,7 +64,7 @@ struct FeatureRow: View {
     let icon: String
     let title: String
     let color: Color
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
@@ -75,10 +73,8 @@ struct FeatureRow: View {
                 .frame(width: 32, height: 32)
                 .background(color.opacity(0.15))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
-            
-            Text(title)
-                .font(.body)
-            
+
+            Text(title).font(.body)
             Spacer()
         }
     }
@@ -91,14 +87,6 @@ struct AboutView: View {
                 Section("عن التطبيق") {
                     LabeledContent("الاسم", value: "SolarEngineer")
                     LabeledContent("الإصدار", value: "1.0.0")
-                    LabeledContent("المطور", value: "Malek Hraibat")
-                }
-                
-                Section("الميزات القادمة") {
-                    Label("تخطيط الألواح", systemImage: "square.grid.3x3")
-                    Label("محاكاة الشمس", systemImage: "sun.horizon")
-                    Label("الفواتير والعملاء", systemImage: "doc.text")
-                    Label("AR على السطح", systemImage: "arkit")
                 }
             }
             .navigationTitle("حول")
