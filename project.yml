@@ -17,8 +17,8 @@ targets:
       CODE_SIGNING_REQUIRED: NO
       CODE_SIGN_IDENTITY: ""
     sources:
-      - App
-      - Models
-      - Services
-      - Views
-      - Theme
+      - path: App
+      - path: Models
+      - path: Services
+      - path: Views
+      - path: Theme
