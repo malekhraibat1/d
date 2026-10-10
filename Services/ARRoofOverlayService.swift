@@ -1,0 +1,62 @@
+import Foundation
+import ARKit
+import RealityKit
+import SwiftData
+import Combine
+
+@MainActor
+final class ARRoofOverlayService: ObservableObject {
+    @Published var currentRoof: RoofPlane?
+    @Published var isScanning: Bool = false
+    
+    let session = ARSession()
+    var rootAnchor = AnchorEntity(world: .zero)
+    
+    @Published private(set) var mapPersistence = ARMapPersistenceService()
+    @Published private(set) var sunPathPersistence = SunPathPersistenceService()
+    @Published var isSavingMap: Bool = false
+    @Published var isRestoringMap: Bool = false
+    
+    func start() {
+        let config = ARWorldTrackingConfiguration()
+        config.planeDetection = [.horizontal, .vertical]
+        session.run(config)
+    }
+    
+    func load(drawing: Any?, roof: RoofPlane) {
+        self.currentRoof = roof
+    }
+    
+    func raycastCenter() -> SIMD3<Float>? {
+        // محاكاة لإرجاع موقع الكاميرا الحالي
+        return session.currentFrame?.camera.transform.columns.3.xyz
+    }
+    
+    func saveCurrentMap(roof: RoofPlane, name: String = "") async -> PersistentARMap? {
+        isSavingMap = true
+        defer { isSavingMap = false }
+        do {
+            return try await mapPersistence.captureWorldMap(session: session, roof: roof, name: name)
+        } catch {
+            return nil
+        }
+    }
+    
+    func restoreMap(_ record: PersistentARMap) async {
+        isRestoringMap = true
+        defer { isRestoringMap = false }
+        do {
+            try await mapPersistence.loadWorldMap(from: record, session: session)
+            if let roof = currentRoof {
+                sunPathPersistence.loadAnchors(for: roof)
+            }
+        } catch {
+            print("Error")
+        }
+    }
+    
+    func createSunPathAnchor(at position: SIMD3<Float>, radius: Double, context: ModelContext) -> SunPathAnchor? {
+        guard let roof = currentRoof else { return nil }
+        return sunPathPersistence.createAnchor(at: position, radius: radius, for: roof, context: context)
+    }
+}
