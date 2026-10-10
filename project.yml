@@ -6,6 +6,8 @@ options:
     iOS: "15.0"
   createIntermediateGroups: true
   generateEmptyDirectories: true
+  # 👇 هذا هو السطر المهم
+  postGenCommand: sed -i.bak -E 's|objectVersion = [0-9]+|objectVersion = 56|' SolarEngineer.xcodeproj/project.pbxproj
 
 settings:
   base:
